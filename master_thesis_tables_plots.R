@@ -48,9 +48,7 @@ estabs$year <- factor(estabs$year)
 
 ## Building tables and plots
 
-
 # (Net) Mortality rate of establishments (per sector, 2004-2012)
-
 tableA <- estabs %>% group_by(year,sector) %>% summarize(estabs = sum(estabs,na.rm = T), exits = sum(estabs_exit,na.rm = T), entries = sum(estabs_entry,na.rm = T)) %>% mutate(estabs_mortality_rate=exits/((estabs+lag(estabs))/2), estabs_birth_rate=entries/((estabs+lag(estabs))/2), estabs_net_mortality_rate=estabs_mortality_rate-estabs_birth_rate) %>% filter(year != 2003)
 
 plot01 <- ggplot(tableA,aes(x=year,y=estabs_mortality_rate,group=sector)) + geom_line(aes(color=sector,size=sector)) + scale_size_manual(values = c(1,1,2,1,1,1,1,1,1)) + theme_classic(base_size=16) + geom_vline(xintercept=c(5,6),linetype="dotted")
@@ -64,7 +62,6 @@ dev.copy(png, file="plot02.png",width=900,height=500)
 dev.off()
 
 # (Net) Mortality rate of establishments within construction firms (per firm size, 2004-2012)
-
 tableB <- estabs %>% group_by(sector,firm_size_cat,year) %>% summarize(firms = sum(firms,na.rm = T), estabs = sum(estabs,na.rm = T), exits = sum(estabs_exit,na.rm = T), entries = sum(estabs_entry,na.rm = T)) %>% mutate(estabs_mortality_rate=exits/((estabs+lag(estabs))/2), estabs_birth_rate=entries/((estabs+lag(estabs))/2), estabs_net_mortality_rate=estabs_mortality_rate-estabs_birth_rate) %>% filter(sector=="construction", year != 2003)
 tableC <- tableB %>% filter(year == 2008) %>% select(year, sector,firm_size_cat,firms,estabs) %>% mutate(estabs_per_firm=estabs/firms)
 print(tableC)
@@ -75,19 +72,22 @@ print(plot03)
 dev.copy(png, file="plot03.png",width=900,height=500)
 dev.off()
 
-tableD <- tableB %>% filter(year %in% c(2008,2009)) %>% select(year, sector,firm_size_cat,estabs_mortality_rate) %>% spread("year","estabs_mortality_rate")
-names(tableD)[3:4] <- c("mortality_rate_2008","mortality_rate_2009")
-tableD <- tableD %>% mutate(var=mortality_rate_2009/mortality_rate_2008-1)
-print(tableD)
+tableD_1 <- tableB %>% filter(year %in% c(2008,2009)) %>% select(year, sector,firm_size_cat,estabs_mortality_rate) %>% spread("year","estabs_mortality_rate")
+names(tableD_1)[3:4] <- c("mortality_rate_2008","mortality_rate_2009")
+tableD_1 <- tableD_1 %>% mutate(var=mortality_rate_2009-mortality_rate_2008)
+print(tableD_1)
 
 plot04 <- ggplot(tableB,aes(x=year,y=estabs_net_mortality_rate,group=firm_size_cat)) + geom_line(aes(color=firm_size_cat),size=2) + scale_size_manual(values = c(1,1,1,1)) + theme_classic(base_size=16) + geom_vline(xintercept=c(5,6),linetype="dotted")
 print(plot04)
 dev.copy(png, file="plot04.png",width=900,height=500)
 dev.off()
 
+tableD_2 <- tableB %>% filter(year %in% c(2008,2009)) %>% select(year, sector,firm_size_cat,estabs_net_mortality_rate) %>% spread("year","estabs_net_mortality_rate")
+names(tableD_2)[3:4] <- c("net_mortality_rate_2008","net_mortality_rate_2009")
+tableD_2 <- tableD_2 %>% mutate(var=net_mortality_rate_2009-net_mortality_rate_2008)
+print(tableD_2)
 
 # (Net) Destruction rate of jobs within construction firms (per firm size, 2004-2012)
-
 tableE <- estabs %>% group_by(sector,firm_size_cat,year) %>% summarize(firms = sum(firms,na.rm = T), estabs = sum(estabs,na.rm = T), jobs = sum(emp,na.rm = T), creations = sum(job_creation,na.rm = T),destructions = sum(job_destruction,na.rm = T)) %>% mutate(jobs_creation_rate=creations/((jobs+lag(jobs))/2), jobs_destruction_rate=destructions/((jobs+lag(jobs))/2), jobs_net_destruction_rate=jobs_destruction_rate-jobs_creation_rate) %>% filter(sector == "construction", year != 2003)
 tableF <- tableE %>% filter(year == 2008) %>% select(year, sector,firm_size_cat,firms,jobs) %>% mutate(jobs_per_firm=jobs/firms)
 print(tableF)
@@ -100,13 +100,13 @@ dev.off()
 
 tableG_1 <- tableE %>% filter(year %in% c(2008,2009)) %>% select(year,sector,firm_size_cat,jobs_destruction_rate) %>% spread("year","jobs_destruction_rate")
 names(tableG_1)[3:4] <- c("job_dest_rate_2008","job_dest_rate_2009")
-tableG_1 <- tableG_1 %>% mutate(var=job_dest_rate_2009/job_dest_rate_2008-1)
+tableG_1 <- tableG_1 %>% mutate(var=job_dest_rate_2009-job_dest_rate_2008)
 tableG_2 <- tableE %>% filter(year %in% c(2008,2009)) %>% select(year,sector,firm_size_cat,jobs_creation_rate) %>% spread("year","jobs_creation_rate")
 names(tableG_2)[3:4] <- c("job_crea_rate_2008","job_crea_rate_2009")
-tableG_2 <- tableG_2 %>% mutate(var=job_crea_rate_2009/job_crea_rate_2008-1)
+tableG_2 <- tableG_2 %>% mutate(var=job_crea_rate_2009-job_crea_rate_2008)
 tableG_3 <- tableE %>% filter(year %in% c(2008,2009)) %>% select(year,sector,firm_size_cat,jobs_net_destruction_rate) %>% spread("year","jobs_net_destruction_rate")
 names(tableG_3)[3:4] <- c("job_net_rate_2008","job_net_rate_2009")
-tableG_3 <- tableG_3 %>% mutate(var=job_net_rate_2009/job_net_rate_2008-1)
+tableG_3 <- tableG_3 %>% mutate(var=job_net_rate_2009-job_net_rate_2008)
 
 plot06 <- ggplot(tableE,aes(x=year,y=jobs_net_destruction_rate,group=firm_size_cat)) + geom_line(aes(color=firm_size_cat),size=2) + scale_size_manual(values = c(1,1,1,1)) + theme_classic(base_size=16) + geom_vline(xintercept=c(5,6),linetype="dotted")
 print(plot06)
